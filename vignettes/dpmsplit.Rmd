@@ -1,0 +1,239 @@
+---
+title: "Disaggregating population inflows and outflows with package 'dpmsplit'"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Disaggregating population inflows and outflows with package 'dpmsplit'}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+library(knitr)
+opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+# Introduction
+
+Package **dpmsplit** has functions for splitting estimated inflows or outflows into component flows, based on imperfect data on these components The package has two main functions, for two different scenarios:
+
+| Estimated totals | Data on components | Desired outputs | Function |
+|:-----------------|:-------------------|:----------------|----------|
+| Estimates of total inflows or outflows for a single population | Imperfect data on components flows, e.g. internal migration vs international migration, for the population | Estimates of component flows that are consistent with estimated inflows or outflows for one population | `split_single()` |
+| Estimates of total inflows and outflows for multiple populations | Imperfect data on components flows between populations and to/from the outside world | Estimates of component flows that are consistent with estimated inflows and outflows for multiple populations | `split_multi()` |
+
+In both cases, the estimated totals, the data on components, and the desired outputs can be disaggregated by characteristics such as age, sex, cohort, and time. 
+
+If package **dpmsplit** is being used in combination with package **account**, then scenario 1 results from running the base model once on a single population, and scenario 2 results from running the base model multiple times on multiple populations. 
+
+By default, functions `split_single()` and `split_multi()` obtain estimates of component flows by scaling all component data upwards or downward by the same proportional amount. Equal proportional scaling is appropriate when the component datasets are more-or-less equally reliable. Equal scaling is not appropriate, however, when some datasets are much more reliable than others. For instance, if the dataset for flow A is highly reliable, while the dataset for flow B is not, then we should tolerate small differences between reported values and final estimates for flow A, and large differences for flow B. Functions `split_single()` and `split_multi()` allow users to specify different 'alterability' values for each dataset, or even different alterability values for different subpopulations within each dataset (e.g. higher alterability values for young people than for old people.) Functions `split_single()` and `split_multi()` are based on  methods presented in @quenneville2005simple, modified to avoid negative values. 
+
+The first part of this vignette deals with the single-population scenario, and the second part deals with the multiple-population scenario In both cases, we present the statistical framework, and then show how to use the functions in package **dpmsplit**.
+
+*WARNING the multiple-population scenario has not been written yet!!*
+
+
+# Single population
+
+## Statistical framework
+
+Let $x^{\text{im}}$ and $x^{\text{em}}$ denote inflows and outflows for a given combination of classifying variables such as age, sex, cohort, time, and posterior draw. To reduce clutter, we omit the classifying variables from our notation. The splitting procedure is applied independently to every combination of classifying variables. 
+
+Let $b = 1, \cdots, B$ denote flow type. For instance, if we are splitting migration flows for a single local authority (LA), then $b=1$ might denote flows from and to other LAs in England and Wales, $b=2$ might denote flows from and to Scotland and Northern Ireland, and $b=3$ might denote flows from and to countries outside the UK.
+
+We would like to estimate inflows $z_b^{\text{im}}$ and outflows $z_b^{\text{em}}$ disaggregated by flow type, such that
+$$\sum_{b=1}^B z_b^{\text{im}} = x^{\text{im}}$$
+and
+$$\sum_{b=1}^B z_b^{\text{em}} = x^{\text{em}}.$$
+
+We have data $u_b^{\text{im}}$ and $u_b^{\text{em}}$ that are imperfect measures of $z_b^{\text{im}}$ and $z_b^{\text{em}}$. Define $u^{\text{im}} \equiv \sum_{b=1}^B u_b^{\text{im}}$ and $u^{\text{em}} \equiv \sum_{b=1}^B u_b^{\text{em}}$. We have, in general,
+$$u^{\text{im}} \neq x^{\text{im}}$$
+and
+$$u^{\text{em}} \neq x^{\text{em}}.$$
+Values for $u_b^{\text{im}}$ and $u_b^{\text{em}}$ are always non-negative.
+
+Our method is based on @quenneville2005simple. Each observation for each data source is assigned a (non-negative) 'alterability' score $a_b^{\text{im}}$ or $a_b^{\text{em}}$. A low value for $a_b^{\text{im}}$ or $a_b^{\text{em}}$ implies that final estimate $z_b^{\text{im}}$ or $z_b^{\text{em}}$ should be close to observation $u_b^{\text{im}}$ or $u_b^{\text{em}}$. An observation would normally be given a low alterability score if that observation was considered to be accurate.
+
+The original @quenneville2005simple method is to set
+$$z_b^{\text{im}} = u_b^{\text{im}} + \alpha_b^{\text{im}} (x^{\text{im}} - u^{\text{im}})$$
+and
+$$z_b^{\text{em}} = u_b^{\text{em}} + \alpha_b^{\text{em}} (x^{\text{em}} - u^{\text{em}})$$
+where 
+$$\alpha_b^{\text{im}} = \frac{a_b^{\text{im}} u_b^{\text{im}}}{\sum_{b=1}^B a_b^{\text{im}} u_b^{\text{im}}}$$
+and
+$$\alpha_b^{\text{em}} = \frac{a_b^{\text{em}} u_b^{\text{em}}}{\sum_{b=1}^B a_b^{\text{em}} u_b^{\text{em}}},$$
+and, by construction, $\sum_{b=1}^B \alpha_b^{\text{im}} = \sum_{b=1}^B \alpha_b^{\text{em}} = 1$. The method adjusts the observed value by adding a share of the overall discrepancy between the observed values and the known total. The size of the share depends on the alterability value and the size of the observed value.
+
+The @quenneville2005simple method is intuitive and transparent. It can, however, produce negative values for $z_b^{\text{im}}$ and $z_b^{\text{im}}$. These negative values never occur when $x^{\text{im}} \ge u^{\text{im}}$ or $x^{\text{em}} \ge u^{\text{em}}$, since in these cases the original values are being adjusted upwards or not adjusted at all. Negative values occur when $x^{\text{im}} < u^{\text{im}}$ and
+$$\alpha_b^{\text{im}} > \frac{u_b^{\text{im}}}{u^{\text{im}} - x^{\text{im}}},$$
+or when $x^{\text{em}} < u^{\text{em}}$ and
+$$\alpha_b^{\text{em}} > \frac{u_b^{\text{em}}}{u^{\text{em}} - x^{\text{em}}}.$$
+Consider, for instance, the case where $u_1^{\text{im}} = 1$, $u_2^{\text{im}} = 5$, $a_1^{\text{im}} = 10$, $a_2^{\text{im}} = 1$, and $x^{\text{im}} = 3$. We then have
+$$\alpha_1^{\text{im}} = \frac{10 \times 1}{10 \times 1 + 1 \times 5} = \frac{2}{3} > \frac{u_b^{\text{im}}}{u^{\text{im}} - x^{\text{im}}} = \frac{1}{1 + 5 - 3} = \frac{1}{3},$$
+and
+$$z_1^{\text{im}} = 1 + \frac{2}{3} \times (3 - 6) = -1.$$
+Even if negative values require unusual combinations of inputs, in a production system dealing with huge volumes of data there is a change that these unusual combinations may arise. We therefore need to modify the original @quenneville2005simple.
+
+Our modification is to cap any downward adjustments at the point where the resulting values of $z_b^{\text{im}}$ or $z_b^{\text{em}}$ are exactly zero. The algorithm for the modified method, where $d \in \{\text{im}, \text{em}\}$, is as follows:
+
+1. For $b$ in $1, \cdots, B$
+    * Set $\alpha_b^d = \frac{a_b^d u_b^d}{\sum_{b=1}^B a_b^d u_b^d}$
+    * Set $z_b^d = u_b^d + \alpha_b^d (x^d - u^d)$
+    * Let $\delta$ be the set of $b$ such that $z_b^d < 0$
+2. If $\delta$ has any members:
+    * For $b$ in $\delta$
+         + Set $x^d = x^d - u_b^d$
+         + Set $z_b^d = u_b^d$
+    * Return to Step 1, but omitting $u_b^d$ and $z_b^d$ for $b$ in $\delta$
+            
+
+## Estimation using **dpmsplit**
+
+We now illustrate how to implement these methods using function `split_single`.
+We start by loading package **dpmsplit** itself, and packages for manipulation the data and presenting the results.
+
+```{r setup}
+library(dpmsplit)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+We work with simulated data. Data frame `sim_totals` is estimates of total outflows, such as might be obtained by running function `estimate_account()` in package **dpmaccpf**, except with only age and time. To keep things manageable, `sim_totals` only has 10 iterations. A real set of outputs might have more classifying variables, and 1000 or more iterations.
+
+```{r}
+sim_totals <- dpmsplit::sim_totals
+head(sim_totals)
+```
+
+The second data frame, `sim_reported`, gives reported values for internal and external outflows, i.e. outflows to elsewhere in the country, and outflows to overseas. Data frame `sim_reported` has the same classifying variables as `sim_totals`. If desired, the data can have fewer classifying variables than the totals.
+
+```{r}
+sim_reported <- dpmsplit::sim_reported
+head(sim_reported)
+```
+
+Running the function as-is results in an error message,
+
+```{r, error = TRUE}
+res1 <- split_single(
+  totals = sim_totals,
+  reported = sim_reported
+)
+```
+The problem is that there are cases where all of the reported data are zero, making it impossible to construct weights. The ideal way to deal with this situation would be to smooth the reported data in a way that changed zeros to small positive values while respecting the main empirical patterns in the data. A quick-and-dirty alternative (which is likely to be good enough when all-zeros cases are rare) is to temporarily change the problematic zeros in the data to ones. This can be done by setting the `zeros_to_ones` argument to `TRUE`.
+
+```{r, fig.width = 15, fig.height = 10}
+res1 <- split_single(
+  totals = sim_totals,
+  reported = sim_reported,
+  zeros_to_ones = TRUE
+)
+```
+
+The result is estimates for internal and external outflows, with the same number of iterations as `sim_totals`.
+
+```{r}
+head(res1)
+```
+
+
+The plot below shows the estimates for internal and external flows in red and the original data in black. The estimates are all higher than the original data. There is a different estimate for each iteration in `sim_totals`.
+
+```{r fig.height=6, fig.width=7}
+estimates_1 <- res1 %>%
+  pivot_longer(c(internal, external)) %>%
+  unnest(value)
+
+original_data <- sim_reported %>%
+  pivot_longer(c(internal, external))
+
+ggplot(estimates_1, aes(x = age, y = value)) +
+  facet_grid(vars(name), vars(time)) +
+  geom_point(col = "red", alpha = 0.3) +
+  geom_point(data = original_data) +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  ))
+```
+
+Next we provide explicit values for alterability, telling `split_single` that we want to alter the external values more than the internal ones (because we consider the internal values to be more reliable). 
+
+```{r, fig.height=6, fig.width=7}
+alter2 <- list(internal = 1, external = 10)
+
+res2 <- split_single(
+  totals = sim_totals,
+  reported = sim_reported,
+  alter = alter2,
+  zeros_to_ones = TRUE
+)
+
+estimates_2 <- res2 %>%
+  pivot_longer(c(internal, external)) %>%
+  unnest(value)
+
+ggplot(estimates_2, aes(x = age, y = value)) +
+  facet_grid(vars(name), vars(time)) +
+  geom_point(col = "red", alpha = 0.3) +
+  geom_point(data = original_data) +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  ))
+```
+
+Compared with the first model, the estimates for internal outflows in the second model are less dispersed and closer to the original data, and the estimates for external outflows are more dispersed and further from the original data.
+
+In our final model, we treat the data on internal outflows as more alterable (less reliable) in 2022 than in 2021 (whilst keeping the even-more alterable external outflows from the previous example).
+
+```{r, fig.height=6, fig.width=7}
+alter3 <- list(
+  internal = data.frame(
+    time = 2021:2022,
+    alter = c(1, 3)
+  ),
+  external = 10
+)
+
+res3 <- split_single(
+  totals = sim_totals,
+  reported = sim_reported,
+  alter = alter3,
+  zeros_to_ones = TRUE
+)
+
+estimates_3 <- res3 %>%
+  pivot_longer(c(internal, external)) %>%
+  unnest(value)
+
+ggplot(estimates_3, aes(x = age, y = value)) +
+  facet_grid(vars(name), vars(time)) +
+  geom_point(col = "red", alpha = 0.3) +
+  geom_point(data = original_data) +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  ))
+```
+
+# Multiple populations
+
+*Detail yet to be added*
+
+# References

@@ -1,2 +1,106 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # dpmsplit
-Simple methods for splitting a total migration flow into components of migration
+
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/ONSdigital/dpmsplit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ONSDigital/dpmsplit/actions/workflows/R-CMD-check.yaml)
+
+[![Style](https://github.com/ONSdigital/dpmsplit/actions/workflows/style.yaml/badge.svg)](https://github.com/ONSDigital/dpmsplit/actions/workflows/style.yaml)
+
+[![Contributor
+Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+<!-- badges: end -->
+
+## Overview
+
+Package **dpmsplit** is for taking estimates of total inflows or total
+outflows and splitting them out into component flows. For instance,
+**dpmsplit** might be used to turn estimates of total moves out of a
+region into (i) moves from the region to elsewhere in the country and
+(ii) moves from the region to overseas.
+
+## Contributor guidance
+
+**To see the complete [contributor
+guidance](https://github.com/ONSdigital/dpmsplit/blob/main/CONTRIBUTING.md)**
+
+**In brief:** All modifications to this package must be made through
+**Pull requests**, ideally linked to a specific GitHub **Issue**.
+
+Pull requests must be reviewed by someone other than the requester, if
+more than one individual was responsible for the requested changes the
+reviewer must be someone other than the main contributor, ideally it
+will be reviewed by someone entirely uninvolved with the particular
+changes made.
+
+Pull requests should have a suitable pull request review form attached,
+with key notes/descriptions of changes made added by the requester and
+if applicable additional notes on particular areas to focus the review
+(syntax changes, key functional changes, documentational changes etc.)
+
+## Getting started
+
+### Installation
+
+#### Install directly from GitHub
+
+If you have linked your RStudio installation to GitHub you should be
+able to install the package directly from GitHub using the
+install_github method from the devtools package
+
+``` r
+# install.packages("devtools")
+library(devtools)
+
+devtools::install_github("ONSdigital/dpmsplit", build_vignettes = TRUE, INSTALL_opts = "--no-multiarch")
+```
+
+If you have not/are unable to link your RStudio installation to GitHub
+(you may encounter a 404 error when attempting the previous approach)
+you can also install the package in two alternative ways
+
+#### Install locally from .zip
+
+Download a copy of the package repository as a .zip file (option in
+‘Code’, below Open with GitHub Desktop) and install using the
+install_local method from the devtools package (replace the path with
+the path to the .zip file download location)
+
+``` r
+# install.packages("devtools")
+library(devtools)
+
+devtools::install_local("C:/.../Downloads/dpmsplit-main.zip", build_vignettes = TRUE, INSTALL_opts = "--no-multiarch")
+```
+
+#### Install locally from cloned repository
+
+Clone the repository (options in ‘Code’ to HTTPS/SSH paths) and build
+the package using the build() method from the devtools package
+
+``` r
+# install.packages("devtools")
+library(devtools)
+
+dpmsplit_build <- devtools::build("~/put/the/package/path/here")
+
+devtools::install_local(dpmsplit_build, build_vignettes = TRUE, INSTALL_opts = "--no-multiarch")
+```
+
+## Usage (example)
+
+The two key functions are `split_single` and `split_multi`.
+`split_single` is for splitting for a single population,
+
+``` r
+library(dpmsplit)
+res <- split_single(
+  totals = sim_totals,
+  reported = sim_reported,
+  zeros_to_ones = TRUE
+)
+```
+
+and `split_multi` is for splitting flows between multiple populations.

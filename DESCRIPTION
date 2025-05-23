@@ -1,0 +1,39 @@
+Package: dpmsplit
+Type: Package
+Title: Disaggregate Inflows or Outflows
+Version: 0.1.0
+Date/Publication: 2025
+Authors@R: 
+    c(person(given = "Office for National Statistics", email = "demographic.methods@ons.gov.uk", role =c("aut","cre")),
+      person(given = "John", family = "Bryant",role = "aut"),
+	person("Rhosanna", "Ellum", role = "ctb"),
+	person("Aidan", "Metcalfe", role = "ctb"),
+	person("Andrew", "Taylor", role = "ctb"),
+      person("Daniel", "Ward", role = "ctb"))
+Description: Disaggregate estimated inflows to or outflows
+    from a population, using data on component
+    flows. The sensitivity to different data sources
+    can be controlled by 'alterability' parameters.
+    Based on methods proposed by Quenneville and Rancourt.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 3.5.0),
+    stats
+Suggests: 
+    dplyr,
+    ggplot2,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    tidyr
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+RoxygenNote: 7.3.2
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp
+URL: https://github.com/ONSdigital/dpmsplit
+BugReports: https://github.com/ONSdigital/dpmsplit/issues/new?assignees=&labels=bug&projects=&template=bug_report_template.md
