@@ -15,6 +15,6 @@ sim_reported_em <- counts_true %>%
   select(-external, -internal)
 
 save(sim_reported_em,
-     file = "../data/sim_reported_em.rda",
-     compress = "bzip2"
+  file = "../data/sim_reported_em.rda",
+  compress = "bzip2"
 )
