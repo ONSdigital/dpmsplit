@@ -91,16 +91,212 @@ devtools::install_local(dpmsplit_build, build_vignettes = TRUE, INSTALL_opts = "
 
 ## Usage (example)
 
-The two key functions are `split_single` and `split_multi`.
-`split_single` is for splitting for a single population,
+In this example, we demonstrate the main features of `dpmsplit` using dummy datasets for the estimated totals and reported counts of migration. The package can be used to split migration counts for both a single population and multiple populations, so we will start with the process of splitting a single population’s migration counts.
+
+### Single Population
+
+First, we need to load the package.
 
 ``` r
 library(dpmsplit)
-res <- split_single(
-  totals = sim_totals,
-  reported = sim_reported,
-  zeros_to_ones = TRUE
+```
+
+Then, we define a data frame for the estimated totals of migration, which would be taken from Step 2 of the DPM. 
+
+``` r
+totals <- data.frame(
+  age = c("20-24", "25-29", "20-24", "25-29"),
+  sex = c("Female", "Female", "Male", "Male"),
+  count = c(20, 24, 15, 8)
+)
+
+totals
+#>     age    sex count
+#> 1 20-24 Female    20
+#> 2 25-29 Female    24
+#> 3 20-24   Male    15
+#> 4 25-29   Male     8
+```
+
+Next, we define a data frame for the reported counts of migration. 
+
+``` r
+reported <- data.frame(
+  age = c("20-24", "25-29", "20-24", "25-29"),
+  sex = c("Female", "Female", "Male", "Male"),
+  internal = c(10, 15, 12, 3),
+  cross_border = c(7, 8, 5, 0),
+  international = c(3, 5, 1, 4)
+)
+
+reported
+#>     age    sex internal cross_border international
+#> 1 20-24 Female       10            7             3
+#> 2 25-29 Female       15            8             5
+#> 3 20-24   Male       12            5             1
+#> 4 25-29   Male        3            0             4
+```
+
+And then, optionally, we define a list of data frames which hold the alterability scores for the reported counts.
+
+``` r
+alter <- list(
+  cross_border = 1.2,
+  international = data.frame(
+  age = c("20-24", "25-29"),
+  alter = c(2, 2.5)
+  )
+)
+
+alter
+#> $cross_border
+#> [1] 1.2
+#> 
+#> $international
+#>     age alter
+#> 1 20-24   2.0
+#> 2 25-29   2.5
+```
+
+Now, with all of our data frames defined, we can call the function `split_single` which performs the splitting of migration counts for a single population,
+
+``` r
+split_single(
+  totals = totals,
+  reported = reported,
+  alter = alter,
+  zeros_to_ones = FALSE
 )
 ```
 
-and `split_multi` is for splitting flows between multiple populations.
+giving us the following output.
+
+``` r
+#>     age    sex  internal cross_border international
+#> 1 20-24 Female 10.000000      7.00000      3.000000
+#> 2 25-29 Female 13.382749      6.96496      3.652291
+#> 3 20-24   Male 10.200000      4.10000      0.700000
+#> 4 25-29   Male  3.230769      0.00000      4.769231
+```
+
+### Multiple Populations
+
+The process for splitting multiple populations is very similar, and we again start by defining data frames for the total estimated counts of migration, but this time we have two data frames, one for inflows and one for outflows.
+
+``` r
+totals_in <- data.frame(
+  year = c(2020, 2020, 2021, 2021),
+  region = c("a", "b", "a", "b"),
+  count = c(13, 8, 5, 12)
+)
+
+totals_out <- data.frame(
+  year = c(2020, 2020, 2021, 2021),
+  region = c("a", "b", "a", "b"),
+  count = c(9, 11, 8, 11)
+)
+
+totals_in
+#>   year region count
+#> 1 2020      a    13
+#> 2 2020      b     8
+#> 3 2021      a     5
+#> 4 2021      b    12
+
+totals_out
+#>   year region count
+#> 1 2020      a     9
+#> 2 2020      b    11
+#> 3 2021      a     8
+#> 4 2021      b    11
+```
+
+Next, we define the data frames for the reported counts of migration. For multiple populations we need a separate data frame for each component of migration, those being internal migration, external immigration, and external emigration. 
+
+``` r
+reported_int <- data.frame(
+  year = c(2020, 2020, 2021, 2021),
+  region_orig = c("a", "b", "a", "b"),
+  region_dest = c("b", "a", "b", "a"),
+  count = c(3, 8, 4, 2)
+)
+
+reported_im <- data.frame(
+  year = c(2020, 2020, 2021, 2021),
+  region_orig = c("x", "x"),
+  region_dest = c("a", "b"),
+  count = c(4, 1)
+)
+
+reported_em <- data.frame(
+  year = c(2020, 2020, 2021, 2021),
+  region_orig = c("a", "b"),
+  region_dest = c("x", "x"),
+  count = c(3, 5)
+)
+
+reported_int
+#>   year region_orig region_dest count
+#> 1 2020           a           b     3
+#> 2 2020           b           a     8
+#> 3 2021           a           b     4
+#> 4 2021           b           a     2
+
+reported_im
+#>   year region_orig region_dest count
+#> 1 2020           x           a     4
+#> 2 2020           x           b     1
+#> 3 2021           x           a     4
+#> 4 2021           x           b     1
+
+reported_em
+#>   year region_orig region_dest count
+#> 1 2020           a           x     3
+#> 2 2020           b           x     5
+#> 3 2021           a           x     3
+#> 4 2021           b           x     5
+```
+
+Finally, we call the function `split_multi` using the inputs we have defined. This function performs the migration splitting process for multiple populations. 
+
+```r
+split_multi(
+  totals_in = totals_in,
+  totals_out = totals_out,
+  reported_int = reported_int,
+  reported_im = reported_im,
+  reported_em = reported_em,
+  epsilon = 0.001,
+  max_iter = 1000L,
+  tolerance = 1e-6
+)
+```
+
+And this gives us the output as a list of data frames.
+
+``` r
+#> $internal
+#>   year region_orig region_dest    count
+#> 1 2020           a           a 0.000000
+#> 2 2020           b           a 7.543107
+#> 3 2020           a           b 5.999000
+#> 4 2020           b           b 0.000000
+#> 5 2021           a           a 0.000000
+#> 6 2021           b           a 2.322976
+#> 7 2021           a           b 6.962336
+#> 8 2021           b           b 0.000000
+#> 
+#> $immigration
+#>   year region_orig region_dest    count
+#> 1 2020           x           a 5.456893
+#> 2 2020           x           b 2.001000
+#> 3 2021           x           a 2.677024
+#> 4 2021           x           b 5.037664
+#>
+#> $emigration
+#>   year region_orig region_dest    count
+#> 1 2020           a           x 3.001000
+#> 2 2020           b           x 3.456893
+#> 3 2021           a           x 1.037665
+#> 4 2021           b           x 8.677024
+```
