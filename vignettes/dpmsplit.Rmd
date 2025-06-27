@@ -243,12 +243,11 @@ library(dpmsplit)
 We will be using simulated data for the inputs of `split_multi`, which requires five data frames for input. The first two we define are `sim_totals_in` and `sim_totals_out` which are estimates of total inflows and outflows, similar to the output from Step 2 of the DPM. These data frames are made up of 10 iterations and feature age, time, and region as classifying variables, but the real Step 2 output may have more classifying variables and iterations. 
 
 ```{r}
-sim_totals_in <- dpmsplit::sim_totals_in 
+sim_totals_in <- dpmsplit::sim_totals_in
 head(sim_totals_in)
 
 sim_totals_out <- dpmsplit::sim_totals_out
 head(sim_totals_out)
-
 ```
 
 The next set of data frames needed are the reported counts of each component of migration, those being internal migration, external immigration, and external emigration. The data frames we define are `sim_reported_int`, `sim_reported_im`, and `sim_reported_em` which are simulated to appear similar to the real data which comes from estimates of these components of migration.
@@ -262,7 +261,6 @@ head(sim_reported_im)
 
 sim_reported_em <- dpmsplit::sim_reported_em
 head(sim_reported_em)
-
 ```
 
 Now that all the input data frames have been defined, we can call the function `split_multi`. We will use the default values for the parameters `epsilon`, `max_iter`, and `tolerance`. 
@@ -270,8 +268,8 @@ Now that all the input data frames have been defined, we can call the function `
 ```{r}
 results <- split_multi(
   totals_in = sim_totals_in,
-  totals_out = sim_totals_out, 
-  reported_int = sim_reported_int, 
+  totals_out = sim_totals_out,
+  reported_int = sim_reported_int,
   reported_im = sim_reported_im,
   reported_em = sim_reported_em,
   epsilon = 0.001,
@@ -303,17 +301,16 @@ head(results$internal)
 head(results$immigration)
 
 head(results$emigration)
-
 ```
 
 The following three plots show the estimates for each component of migration in red and the original data in black, where there is a different estimate for each iteration in `sim_totals_in` and `sim_totals_out`.
 
 ```{r, fig.height=6, fig.width=7}
-int_estimate <- results$internal %>% 
-  unnest(count) %>% 
+int_estimate <- results$internal %>%
+  unnest(count) %>%
   filter(region_orig != region_dest)
 
- ggplot(int_estimate, aes(x = age, y = count)) +
+ggplot(int_estimate, aes(x = age, y = count)) +
   facet_grid(vars(time)) +
   geom_point(col = "red", alpha = 0.3) +
   geom_point(data = sim_reported_int) +
@@ -328,10 +325,10 @@ int_estimate <- results$internal %>%
 ```
 
 ```{r, fig.height=6, fig.width=7}
-im_estimate <- results$immigration %>% 
+im_estimate <- results$immigration %>%
   unnest(count)
 
- ggplot(im_estimate, aes(x = age, y = count)) +
+ggplot(im_estimate, aes(x = age, y = count)) +
   facet_grid(vars(time)) +
   geom_point(col = "red", alpha = 0.3) +
   geom_point(data = sim_reported_im) +
@@ -346,10 +343,10 @@ im_estimate <- results$immigration %>%
 ```
 
 ```{r, fig.height=6, fig.width=7}
-em_estimate <- results$emigration %>% 
+em_estimate <- results$emigration %>%
   unnest(count)
 
- ggplot(em_estimate, aes(x = age, y = count)) +
+ggplot(em_estimate, aes(x = age, y = count)) +
   facet_grid(vars(time)) +
   geom_point(col = "red", alpha = 0.3) +
   geom_point(data = sim_reported_em) +
