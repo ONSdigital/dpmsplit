@@ -234,7 +234,7 @@ ggplot(estimates_3, aes(x = age, y = value)) +
 
 ## Estimation using **dpmsplit**
 
-Now we will present the migration splitting procedure for multiple populations using the function `split_multi`. We start by loading the `dpmsplit` package, as well as the packages needed for manipulating the data and presenting the results.
+Now we will present the migration splitting procedure for multiple populations using the function `split_multi`. We start by loading the `dpmsplit` package, as well as the packages needed for manipulating the data and presenting the results. 
 
 ```{r}
 library(dpmsplit)
