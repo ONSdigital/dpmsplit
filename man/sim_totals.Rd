@@ -18,6 +18,6 @@ sim_totals
 \description{
 Simulated estimates of outflows from a population,
 mimicking the results from running the base model,
-though with only 10 interations.
+though with only 10 iterations.
 }
 \keyword{datasets}
