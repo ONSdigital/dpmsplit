@@ -26,8 +26,13 @@ region into (i) moves from the region to elsewhere in the country and
 **To see the complete [contributor
 guidance](https://github.com/ONSdigital/dpmsplit/blob/main/CONTRIBUTING.md)**
 
-**In brief:** All modifications to this package must be made through
-**Pull requests**, ideally linked to a specific GitHub **Issue**.
+**In brief:** Contributors with write access to this repository should
+create and make changes on a feature branch. Contributors without write
+access should fork this repository to their own GitHub account and make
+changes on a new branch.
+
+All modifications to this package must be made through **Pull
+requests**, ideally linked to a specific GitHub **Issue**.
 
 Pull requests must be reviewed by someone other than the requester, if
 more than one individual was responsible for the requested changes the
