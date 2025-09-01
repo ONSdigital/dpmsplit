@@ -20,7 +20,7 @@ opts_chunk$set(
 
 # Introduction
 
-Package **dpmsplit** has functions for splitting estimated inflows or outflows into component flows, based on imperfect data on these components The package has two main functions, for two different scenarios:
+Package **dpmsplit** has functions for splitting estimated inflows or outflows into component flows, based on imperfect data on these components. The package has two main functions, for two different scenarios:
 
 | Estimated totals | Data on components | Desired outputs | Function |
 |:-----------------|:-------------------|:----------------|----------|
@@ -29,13 +29,11 @@ Package **dpmsplit** has functions for splitting estimated inflows or outflows i
 
 In both cases, the estimated totals, the data on components, and the desired outputs can be disaggregated by characteristics such as age, sex, cohort, and time. 
 
-If package **dpmsplit** is being used in combination with package **account**, then scenario 1 results from running the base model once on a single population, and scenario 2 results from running the base model multiple times on multiple populations. 
+If package **dpmsplit** is being used in combination with package **dpmaccount**, then scenario 1 results from running the base model once on a single population, and scenario 2 results from running the base model multiple times on multiple populations. 
 
-By default, functions `split_single()` and `split_multi()` obtain estimates of component flows by scaling all component data upwards or downward by the same proportional amount. Equal proportional scaling is appropriate when the component datasets are more-or-less equally reliable. Equal scaling is not appropriate, however, when some datasets are much more reliable than others. For instance, if the dataset for flow A is highly reliable, while the dataset for flow B is not, then we should tolerate small differences between reported values and final estimates for flow A, and large differences for flow B. Functions `split_single()` and `split_multi()` allow users to specify different 'alterability' values for each dataset, or even different alterability values for different subpopulations within each dataset (e.g. higher alterability values for young people than for old people.) Functions `split_single()` and `split_multi()` are based on  methods presented in @quenneville2005simple, modified to avoid negative values. 
+By default, functions `split_single()` and `split_multi()` obtain estimates of component flows by scaling all component data upwards or downwards by the same proportional amount. Equal proportional scaling is appropriate when the component datasets are more-or-less equally reliable. Equal scaling is not appropriate, however, when some datasets are much more reliable than others. For instance, if the dataset for flow A is highly reliable, while the dataset for flow B is not, then we should tolerate small differences between reported values and final estimates for flow A, and large differences for flow B. Functions `split_single()` and `split_multi()` allow users to specify different 'alterability' values for each dataset, or even different alterability values for different subpopulations within each dataset (e.g. higher alterability values for young people than for old people). Functions `split_single()` and `split_multi()` are based on  methods presented in @quenneville2005simple, modified to avoid negative values. 
 
-The first part of this vignette deals with the single-population scenario, and the second part deals with the multiple-population scenario In both cases, we present the statistical framework, and then show how to use the functions in package **dpmsplit**.
-
-*WARNING the multiple-population scenario has not been written yet!!*
+The first part of this vignette deals with the single-population scenario, and the second part deals with the multiple-population scenario. In both cases, we present the statistical framework, and then show how to use the functions in package **dpmsplit**.
 
 
 # Single population
@@ -69,7 +67,7 @@ and
 $$\alpha_b^{\text{em}} = \frac{a_b^{\text{em}} u_b^{\text{em}}}{\sum_{b=1}^B a_b^{\text{em}} u_b^{\text{em}}},$$
 and, by construction, $\sum_{b=1}^B \alpha_b^{\text{im}} = \sum_{b=1}^B \alpha_b^{\text{em}} = 1$. The method adjusts the observed value by adding a share of the overall discrepancy between the observed values and the known total. The size of the share depends on the alterability value and the size of the observed value.
 
-The @quenneville2005simple method is intuitive and transparent. It can, however, produce negative values for $z_b^{\text{im}}$ and $z_b^{\text{im}}$. These negative values never occur when $x^{\text{im}} \ge u^{\text{im}}$ or $x^{\text{em}} \ge u^{\text{em}}$, since in these cases the original values are being adjusted upwards or not adjusted at all. Negative values occur when $x^{\text{im}} < u^{\text{im}}$ and
+The @quenneville2005simple method is intuitive and transparent. It can, however, produce negative values for $z_b^{\text{im}}$ and $z_b^{\text{em}}$. These negative values never occur when $x^{\text{im}} \ge u^{\text{im}}$ or $x^{\text{em}} \ge u^{\text{em}}$, since in these cases the original values are being adjusted upwards or not adjusted at all. Negative values occur when $x^{\text{im}} < u^{\text{im}}$ and
 $$\alpha_b^{\text{im}} > \frac{u_b^{\text{im}}}{u^{\text{im}} - x^{\text{im}}},$$
 or when $x^{\text{em}} < u^{\text{em}}$ and
 $$\alpha_b^{\text{em}} > \frac{u_b^{\text{em}}}{u^{\text{em}} - x^{\text{em}}}.$$
@@ -118,7 +116,7 @@ sim_reported <- dpmsplit::sim_reported
 head(sim_reported)
 ```
 
-Running the function as-is results in an error message,
+Running the function as-is results in an error message.
 
 ```{r, error = TRUE}
 res1 <- split_single(
@@ -234,6 +232,135 @@ ggplot(estimates_3, aes(x = age, y = value)) +
 
 # Multiple populations
 
-*Detail yet to be added*
+## Estimation using **dpmsplit**
+
+Now we will present the migration splitting procedure for multiple populations using the function `split_multi`. We start by loading the `dpmsplit` package, as well as the packages needed for manipulating the data and presenting the results. 
+
+```{r}
+library(dpmsplit)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+We will be using simulated data for the inputs of `split_multi`, which requires five data frames for input. The first two we define are `sim_totals_in` and `sim_totals_out` which are estimates of total inflows and outflows, similar to the output from Step 2 of the DPM. These data frames are made up of 10 iterations and feature age, time, and region as classifying variables, but the real Step 2 output may have more classifying variables and iterations. 
+
+```{r}
+sim_totals_in <- dpmsplit::sim_totals_in
+head(sim_totals_in)
+
+sim_totals_out <- dpmsplit::sim_totals_out
+head(sim_totals_out)
+```
+
+The next set of data frames needed are the reported counts of each component of migration, those being internal migration, external immigration, and external emigration. The data frames we define are `sim_reported_int`, `sim_reported_im`, and `sim_reported_em` which are simulated to appear similar to the real data which comes from estimates of these components of migration.
+
+```{r}
+sim_reported_int <- dpmsplit::sim_reported_int
+head(sim_reported_int)
+
+sim_reported_im <- dpmsplit::sim_reported_im
+head(sim_reported_im)
+
+sim_reported_em <- dpmsplit::sim_reported_em
+head(sim_reported_em)
+```
+
+Now that all the input data frames have been defined, we can call the function `split_multi`. We will use the default values for the parameters `epsilon`, `max_iter`, and `tolerance`. 
+
+```{r}
+results <- split_multi(
+  totals_in = sim_totals_in,
+  totals_out = sim_totals_out,
+  reported_int = sim_reported_int,
+  reported_im = sim_reported_im,
+  reported_em = sim_reported_em,
+  epsilon = 0.001,
+  max_iter = 1000L,
+  tolerance = 1e-6
+)
+```
+
+It should be noted that smaller values for `max_iter` may lead to the algorithm failing to converge. For example, if we set `max_iter` to 100 instead of 1000 this error is produced:
+
+```{r, error=TRUE}
+results <- split_multi(
+  totals_in = sim_totals_in,
+  totals_out = sim_totals_out,
+  reported_int = sim_reported_int,
+  reported_im = sim_reported_im,
+  reported_em = sim_reported_em,
+  epsilon = 0.001,
+  max_iter = 100L,
+  tolerance = 1e-6
+)
+```
+
+The output from the `split_multi` function gives us the total migration counts divided between internal migration, external immigration, and external emigration. Each component of migration has a separate data frame containing the adjusted count values.
+
+```{r}
+head(results$internal)
+
+head(results$immigration)
+
+head(results$emigration)
+```
+
+The following three plots show the estimates for each component of migration in red and the original data in black, where there is a different estimate for each iteration in `sim_totals_in` and `sim_totals_out`.
+
+```{r, fig.height=6, fig.width=7}
+int_estimate <- results$internal %>%
+  unnest(count) %>%
+  filter(region_orig != region_dest)
+
+ggplot(int_estimate, aes(x = age, y = count)) +
+  facet_grid(vars(time)) +
+  geom_point(col = "red", alpha = 0.3) +
+  geom_point(data = sim_reported_int) +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  labs(title = "Internal Migration")
+```
+
+```{r, fig.height=6, fig.width=7}
+im_estimate <- results$immigration %>%
+  unnest(count)
+
+ggplot(im_estimate, aes(x = age, y = count)) +
+  facet_grid(vars(time)) +
+  geom_point(col = "red", alpha = 0.3) +
+  geom_point(data = sim_reported_im) +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  labs(title = "External Immigration")
+```
+
+```{r, fig.height=6, fig.width=7}
+em_estimate <- results$emigration %>%
+  unnest(count)
+
+ggplot(em_estimate, aes(x = age, y = count)) +
+  facet_grid(vars(time)) +
+  geom_point(col = "red", alpha = 0.3) +
+  geom_point(data = sim_reported_em) +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  labs(title = "External Emigration")
+```
 
 # References
