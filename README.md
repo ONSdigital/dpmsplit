@@ -142,7 +142,7 @@ reported
 #> 4 25-29   Male        3            0             4
 ```
 
-And then, optionally, we define a list of data frames which hold the alterability scores for the reported counts.
+And then, optionally, we define a list of data frames which hold the alterability scores for the reported counts. These scores are used for weighting, so if we know there are some inaccuracies in the input data we can reflect its reliability by increasing the alterability score for that data frame. Otherwise, the default values for alterability are 1, meaning the data will not be altered. 
 
 ``` r
 alter <- list(
