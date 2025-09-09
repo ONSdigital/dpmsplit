@@ -163,7 +163,7 @@ alter
 #> 2 25-29   2.5
 ```
 
-Now, with all of our data frames defined, we can call the function `split_single` which performs the splitting of migration counts for a single population,
+Now, with all of our data frames defined, we can call the function `split_single` which performs the splitting of migration counts for a single population. If set to `TRUE`, the argument `zeros_to_ones` replaces rows containing only zeros with ones to prevent dividing by zero. Here we have it set to the default value of `FALSE` since our `reported` data frame does not include any rows that only contain zeros. 
 
 ``` r
 split_single(
@@ -174,7 +174,7 @@ split_single(
 )
 ```
 
-giving us the following output.
+This gives us the following output.
 
 ``` r
 #>     age    sex  internal cross_border international
@@ -262,7 +262,7 @@ reported_em
 #> 4 2021           b           x     5
 ```
 
-Finally, we call the function `split_multi` using the inputs we have defined. This function performs the migration splitting process for multiple populations. 
+Finally, we call the function `split_multi` using the inputs we have defined. This function performs the migration splitting process for multiple populations. The parameters `epsilon`, `max_iter`, and `tolerance` can all be modified to fit different needs. `epsilon` is a small quantity which is added to cells in the reported data which have a value of zero (aside from the diagonal elements in `reported_int`). This is to prevent dividing by zero. `max_iter` is the maximum number of iterations that we want the algorithm to run for. Small numbers for this argument may result in the algorithm not converging. `tolerance` is the maximum absolute difference between the target totals and the calculated totals after going through IPF. The larger this value is the less accurate the estimates become. In this example we are using the default values for each of these arguments. 
 
 ```r
 split_multi(
@@ -277,7 +277,7 @@ split_multi(
 )
 ```
 
-And this gives us the output as a list of data frames.
+This gives us the output as a list of data frames.
 
 ``` r
 #> $internal
