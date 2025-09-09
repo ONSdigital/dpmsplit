@@ -266,7 +266,7 @@ sim_reported_em <- dpmsplit::sim_reported_em
 head(sim_reported_em)
 ```
 
-Now that all the input data frames have been defined, we can call the function `split_multi`. We will use the default values for the parameters `epsilon`, `max_iter`, and `tolerance`. 
+Now that all the input data frames have been defined, we can call the function `split_multi`. We will use the default values for the parameters `epsilon`, `max_iter`, and `tolerance`. These parameters can be modified to fit different needs. `epsilon` is a small quantity which is added to cells in the reported data which have a value of zero (aside from the diagonal elements in `reported_int`). This is to prevent dividing by zero. `max_iter` is the maximum number of iterations that we want the algorithm to run for. And, `tolerance` is the maximum absolute difference between the target totals and the calculated totals after going through IPF. The larger this value is the less accurate the estimates become. 
 
 ```{r}
 results <- split_multi(
