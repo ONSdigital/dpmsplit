@@ -164,7 +164,7 @@ ggplot(estimates_1, aes(x = age, y = value)) +
   ))
 ```
 
-Next we provide explicit values for alterability, telling `split_single` that we want to alter the external values more than the internal ones (because we consider the internal values to be more reliable). 
+Next we provide explicit values for alterability using the parameter `alter`, telling `split_single` that we want to alter the external values more than the internal ones (because we consider the internal values to be more reliable). These scores are used for weighting, so if we know there are some inaccuracies in the input data we can reflect the reliability of each data frame by increasing its alterability score. Otherwise, the default values of alterability are 1, meaning the data frames will not be altered. 
 
 ```{r, fig.height=6, fig.width=7}
 alter2 <- list(internal = 1, external = 10)
